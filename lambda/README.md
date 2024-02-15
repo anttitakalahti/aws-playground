@@ -160,6 +160,19 @@ test the lambda
 "StatusCode": 200,
 "ExecutedVersion": "$LATEST"
 }
-~/Work/aws-playground/lambda [main] $ cat response.json
-{"statusCode": 200, "headers": {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "content-type": "application/json"}, "body": [{"payload": ""}]}~/Work/aws-playground/lambda [main] $
+~/Work/aws-playground/lambda [main] $ cat response.json | jq
+{
+  "statusCode": 200,
+  "headers": {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "content-type": "application/json"
+  },
+  "body": [
+    {
+      "payload": ""
+    }
+  ]
+}
+~/Work/aws-playground/lambda [main] $
 ```
