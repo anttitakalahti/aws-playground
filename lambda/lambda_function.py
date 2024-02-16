@@ -1,25 +1,11 @@
-#!/usr/bin/python3
-
-import logging
 import random
-from aws_lambda_powertools.utilities.typing import LambdaContext
 
 
-logger = logging.getLogger()
-logger.setLevel("INFO")
-
-
-def handler(event: dict, context: LambdaContext) -> dict:
+def lambda_handler(event, context):
     json_data = [{"payload": f"{event.get('payload', '').upper()}"}]
 
     if random.random() > 0.5:
-        return {
-            "statusCode": "500",
-            "body": "Internal server error",
-            "headers": {
-                "Content-Type": "application/json",
-            }
-        }
+        raise Exception("moomoo")
 
     return {
         "statusCode": 200,
