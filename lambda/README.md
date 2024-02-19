@@ -5,10 +5,12 @@ It took me a while to find the documentation for
 [Lambda invoke](https://docs.aws.amazon.com/cli/latest/reference/lambda/invoke.html) where I found that it returns 200
 for pretty much all the time.
 
+Biggest lesson learned was to go to the UI to test the lambda to see that it fails when it should.
+
 ## Create Lambda
 
-You need to get access to AWS cli. I used access key because it worked for me. At work, I use the SSO portal to get
-temporary keys. This adds this part: `--profile mydemouser` to aws commands.
+You need to get access to AWS cli. I used access key because it worked for me.
+This adds this part: `--profile mydemouser` to aws commands.
 If you use other methods some changes might be needed.
 
 ```
