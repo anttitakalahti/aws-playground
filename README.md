@@ -22,12 +22,17 @@ aws-cli/2.15.18 Python/3.11.6 Darwin/23.2.0 exe/x86_64 prompt/off
 ~ $
 ```
 
-## Lambda
+## [AWS Lambda](https://aws.amazon.com/lambda/)
 
 lambda folder has everything needed to deploy the lambda
 
-## Simple Queue Service
+## [AWS Step Functions](https://aws.amazon.com/step-functions/)
 
-simple_queue_service part is in progress.
+in progress
 
+## [AWS Simple Queue Service](https://aws.amazon.com/sqs/)
 
+simple_queue_service part is in progress, possibly abandoned.
+
+TODO write an example where lambda uppercases a string and posts to completed (virtual) queue.
+(explain how one could consume the completed queue and react to events)

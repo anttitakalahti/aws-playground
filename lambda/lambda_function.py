@@ -1,11 +1,11 @@
 import random
 
 
-def lambda_handler(event, context):
-    json_data = [{"payload": f"{event.get('payload', '').upper()}"}]
+def handler(event, context):
+    if random.random() > 0.75:
+        raise Exception("Internal error")
 
-    if random.random() > 0.5:
-        raise Exception("moomoo")
+    json_data = {"payload": f"{event.get('payload', '').upper()}"}
 
     return {
         "statusCode": 200,
