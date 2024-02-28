@@ -1,6 +1,10 @@
 # Amazon Step Functions
 
-My preferred solution for microservice orchestration is step functions.
+Step functions allow you to orchestrate complex workflows.
+
+I removed my accounts from the files so be sure to replace all the `<account>` parts with your account id.
+
+This step function calls two lambdas and maps the outputs to inputs in between.
 
 ## Callback pattern example
 
@@ -29,63 +33,93 @@ This step functions uses the lambda from lambda folder. I also created another l
 
 ## Create step function
 
-I designed the step function in the GUI. 
-
-I then ran it in the GUI, and it failed like this:
-```
-User: arn:aws:sts::<account>:assumed-role/StepFunctions-MyStateMachine-<hash_maybe>
-is not authorized to perform: lambda:InvokeFunction on resource: 
-arn:aws:lambda:us-east-1:<account>:function:hello-world:$LATEST because no identity-based policy allows the 
-lambda:InvokeFunction action (Service: AWSLambda; Status Code: 403; Error Code: AccessDeniedException; Request ID: 
-<id>; Proxy: null)
-```
+First you need to create a role for the step function.
 
 ```
-~/Work/aws-playground/step-functions [main] $ aws --profile mydemouser stepfunctions list-state-machines
+~/Work/aws-playground/step-functions [main] $ aws --profile mydemouser iam create-role \
+>   --role-name StepFunctions-MyFirstStateMachine-role \
+>   --assume-role-policy-document "$(<iam_role_definition.json)"
 {
-    "stateMachines": [
-        {
-            "stateMachineArn": "arn:aws:states:us-east-1:<account>:stateMachine:<id>",
-            "name": "<name>",
-            "type": "STANDARD",
-            "creationDate": "2024-02-27T11:37:46.683000+02:00"
+    "Role": {
+        "Path": "/",
+        "RoleName": "StepFunctions-MyFirstStateMachine-role",
+        "RoleId": "AROAVDTUAHFNZM5R22B7D",
+        "Arn": "arn:aws:iam::<account>:role/StepFunctions-MyFirstStateMachine-role",
+        "CreateDate": "2024-02-28T07:47:12+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": [
+                            "states.amazonaws.com"
+                        ]
+                    },
+                    "Action": "sts:AssumeRole",
+                    "Condition": {
+                        "ArnLike": {
+                            "aws:SourceArn": "arn:aws:states:us-east-1:<account>:stateMachine:*"
+                        },
+                        "StringEquals": {
+                            "aws:SourceAccount": "<account>"
+                        }
+                    }
+                }
+            ]
         }
-    ]
+    }
 }
 ~/Work/aws-playground/step-functions [main] $
 ```
-run
+
+Then you can create the state machine
 
 ```
 ~/Work/aws-playground/step-functions [main] $ aws --profile mydemouser stepfunctions \
->   start-execution \
->   --state-machine-arn arn:aws:states:us-east-1:<account>:stateMachine:MyStateMachine-dpumksw4h \
->   --input "{\"payload\": \"hi mom\"}"
+>    create-state-machine \
+>    --name MyFirstStateMachine \
+>    --definition "$(<stepfunction_definition.json)" \
+>    --role-arn arn:aws:iam::<account>:role/StepFunctions-MyFirstStateMachine-role
 {
-    "executionArn": "arn:aws:states:us-east-1:<account>:execution:MyStateMachine-dpumksw4h:<hash>",
-    "startDate": "2024-02-27T14:07:45.109000+02:00"
+    "stateMachineArn": "arn:aws:states:us-east-1:<account>:stateMachine:MyFirstStateMachine",
+    "creationDate": "2024-02-28T09:52:18.799000+02:00"
 }
 ~/Work/aws-playground/step-functions [main] $
 ```
 
-This will also fail for the same reason
+and run the function
 
 ```
-~/Work/aws-playground/step-functions [main] $ aws --profile mydemouser iam list-roles --query Roles[].[RoleName,Arn]
-[
-    ...
-    [
-        "StepFunctions-MyStateMachine-<name-role-hash>",
-        "arn:aws:iam::<account>:role/service-role/StepFunctions-MyStateMachine-<name-role-hash>"
-    ]
-]
-~/Work/aws-playground/step-functions [main] $ aws --profile mydemouser iam attach-role-policy \
-  --role-name StepFunctions-MyStateMachine-<name-role-hash> \
-  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole
+~/Work/aws-playground/step-functions [main] $ aws --profile mydemouser stepfunctions \
+>    start-execution \
+>    --state-machine-arn arn:aws:states:us-east-1:<account>:stateMachine:MyFirstStateMachine \
+>    --input '{"payload": "hi mom"}'
+{
+    "executionArn": "arn:aws:states:us-east-1:<account>:execution:MyFirstStateMachine:<hash>",
+    "startDate": "2024-02-28T09:59:50.092000+02:00"
+}
+~/Work/aws-playground/step-functions [main] $ aws --profile mydemouser stepfunctions \
+>     describe-execution \
+>     --execution-arn arn:aws:states:us-east-1:<account>:execution:MyFirstStateMachine:<hash>
+{
+    "executionArn": "arn:aws:states:us-east-1:<account>:execution:MyFirstStateMachine:<hash>",
+    "stateMachineArn": "arn:aws:states:us-east-1:<account>:stateMachine:MyFirstStateMachine",
+    "name": "<hash>",
+    "status": "SUCCEEDED",
+    "startDate": "2024-02-28T12:11:53.809000+02:00",
+    "stopDate": "2024-02-28T12:11:55.169000+02:00",
+    "input": "{\"payload\": \"hi mom\"}",
+    "inputDetails": {
+        "included": true
+    },
+    "output": "{\"statusCode\":200,\"headers\":{\"Access-Control-Allow-Origin\":\"*\",\"Access-Control-Allow-Methods\":\"GET, POST, PUT, DELETE, OPTIONS\",\"content-type\":\"application/json\"},\"body\":{\"payload\":\"MOM IH\"}}",
+    "outputDetails": {
+        "included": true
+    },
+    "redriveCount": 0,
+    "redriveStatus": "NOT_REDRIVABLE",
+    "redriveStatusReason": "Execution is SUCCEEDED and cannot be redriven"
+}
 ~/Work/aws-playground/step-functions [main] $
 ```
-https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html
-
-
-
-https://awscli.amazonaws.com/v2/documentation/api/latest/reference/stepfunctions/create-state-machine.html
